@@ -8,11 +8,11 @@ The command generates code based on Doctrine entities metadata.
 
 ## Installation
 1. Add dependency to composer.json file of your project:
-```json
+```
     "maxmode/generator": "dev-master"
 ```
 1. Register bundle in AppKernel.php:
-```php
+```
     $bundles = array(
         ...
         new Maxmode\GeneratorBundle\MaxmodeGeneratorBundle(),
