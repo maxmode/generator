@@ -6,7 +6,7 @@
     "homepage": "https://github.com/maxmode/generator/wiki",
     "license": "MIT",
     "authors": [
-        {"name": "Maksym Moskvychev", "email": "m.moskvychev@gmail.com"},
+        {"name": "Maksym Moskvychev", "email": "m.moskvychev@gmail.com"}
     ],
     "minimum-stability": "dev",
     "require": {
