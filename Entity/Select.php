@@ -69,6 +69,7 @@ class Select
                 $entityList[] = $entityClass;
             }
         }
+        //todo: throw exception if there is no available entities in the system
 
         return $entityList;
     }
