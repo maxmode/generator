@@ -1,24 +1,32 @@
-== About ==
-Bundle supply command line tool to generate CRUD.
-It generates code, used by sonata-admin bundle.
+## About
+
+This is a bundle for Symfony 2.
+
+It provides command line tool to generate CRUD code, used by sonata-admin bundle.
+
 The command generates code based on Doctrine entities metadata.
 
-== Installation ==
-# Add dependency to composer.json file of your project:
-<code>
+## Installation
+1. Add dependency to composer.json file of your project:
+```json
     "maxmode/generator": "dev-master"
-</code>
-# Register bundle in AppKernel.php:
-<code>
+```
+1. Register bundle in AppKernel.php:
+```php
     $bundles = array(
         ...
         new Maxmode\GeneratorBundle\MaxmodeGeneratorBundle(),
     );
-</code>
+```
 
-== Usage ==
-# Create doctrine entity
-# Run comand to generate CRUD for it:
-<code>
+## Usage
+
+1. Create doctrine entity manually or with entity generator:
+```
+    php app/console doctrine:generate:entity
+```
+
+1. Run <b>comand to generate CRUD</b> for it:
+```
     php app/console maxmode:generate:sonata-admin
-</code>
+```
