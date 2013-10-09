@@ -1,0 +1,19 @@
+{
+    "name": "maxmode/generator",
+    "type": "library",
+    "description": "Command line tools to generate code for sonata-admin bundle",
+    "keywords": ["sonata-admin", "code generator"],
+    "homepage": "https://github.com/maxmode/generator/wiki",
+    "license": "MIT",
+    "authors": [
+        {"name": "Maksym Moskvychev", "email": "m.moskvychev@gmail.com"},
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.3.2",
+        "doctrine/orm": "2.3"
+    },
+    "autoload": {
+        "psr-0": { "Maxmode\\GeneratorBundle\\": "" }
+    }
+}
