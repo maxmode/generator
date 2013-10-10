@@ -19,15 +19,9 @@ class Select
     protected $_classGenerator;
 
     /**
-     * @param $entityClass
-     *
-     * @throws \Exception
-     */
-
-    /**
      * @param string $entityClass
      *
-     * @return bool
+     * @return string entity class on success
      * @throws \Exception
      */
     public function validateClass($entityClass)
@@ -41,7 +35,7 @@ class Select
         }
         $this->_entityManager->getClassMetadata($entityClass);
 
-        return true;
+        return $entityClass;
     }
 
     /**
@@ -58,6 +52,7 @@ class Select
 
     /**
      * @return array
+     * @throws \Exception
      */
     public function getEntityList()
     {
@@ -69,19 +64,11 @@ class Select
                 $entityList[] = $entityClass;
             }
         }
-        //todo: throw exception if there is no available entities in the system
+        if (!$entityList) {
+            throw new \Exception("There is no doctrine entities without admin class in the system");
+        }
 
         return $entityList;
-    }
-
-    /**
-     * @param string $entityClass
-     *
-     * @return array
-     */
-    public function getEntityFields($entityClass)
-    {
-        return $this->_entityManager->getClassMetadata($entityClass)->getFieldNames();
     }
 
     /**

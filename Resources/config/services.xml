@@ -8,11 +8,27 @@
         <parameter key="maxmode_generator.admin.class_generator.class">Maxmode\GeneratorBundle\Admin\ClassGenerator</parameter>
         <parameter key="maxmode_generator.admin.services_generator.class">Maxmode\GeneratorBundle\Admin\ServicesGenerator</parameter>
         <parameter key="maxmode_generator.entity.select.class">Maxmode\GeneratorBundle\Entity\Select</parameter>
+        <parameter key="maxmode_generator.sonata_admin.generator.class">Maxmode\GeneratorBundle\Command\Sonata\Admin\GeneratorCommand</parameter>
     </parameters>
 
     <services>
-        <service id="maxmode_generator.admin.class_generator" class="%maxmode_generator.admin.class_generator.class%" />
-        <service id="maxmode_generator.admin.services_generator" class="%maxmode_generator.admin.services_generator.class%" />
+        <service id="maxmode_generator.admin.class_generator" class="%maxmode_generator.admin.class_generator.class%" >
+            <call method="setFilesystem">
+                <argument type="service" id="filesystem" />
+            </call>
+            <call method="setEntityManager">
+                <argument type="service" id="doctrine.orm.entity_manager" />
+            </call>
+        </service>
+
+        <service id="maxmode_generator.admin.services_generator" class="%maxmode_generator.admin.services_generator.class%" >
+            <call method="setFilesystem">
+                <argument type="service" id="filesystem" />
+            </call>
+            <call method="setClassGenerator">
+                <argument type="service" id="maxmode_generator.admin.class_generator" />
+            </call>
+        </service>
 
         <service id="maxmode_generator.entity.select" class="%maxmode_generator.entity.select.class%" >
             <call method="setEntityManager">
@@ -20,6 +36,19 @@
             </call>
             <call method="setClassGenerator">
                 <argument type="service" id="maxmode_generator.admin.class_generator" />
+            </call>
+        </service>
+
+        <!--Generator command-->
+        <service id="maxmode_generator.sonata_admin.generator" class="%maxmode_generator.sonata_admin.generator.class%" >
+            <call method="setClassGenerator">
+                <argument type="service" id="maxmode_generator.admin.class_generator" />
+            </call>
+            <call method="setServicesGenerator">
+                <argument type="service" id="maxmode_generator.admin.services_generator" />
+            </call>
+            <call method="setEntitySelect">
+                <argument type="service" id="maxmode_generator.entity.select" />
             </call>
         </service>
     </services>

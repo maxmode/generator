@@ -1,6 +1,8 @@
 <?php
 namespace Maxmode\GeneratorBundle\Admin;
 
+use Symfony\Component\Filesystem\Filesystem;
+
 use Maxmode\GeneratorBundle\Admin\ClassGenerator;
 
 /**
@@ -14,6 +16,11 @@ class ServicesGenerator
      * @var ClassGenerator
      */
     protected $_classGenerator;
+
+    /**
+     * @var Filesystem
+     */
+    protected $_filesystem;
 
     /**
      * @var string
@@ -76,6 +83,39 @@ class ServicesGenerator
     public function setGroup($groupName)
     {
         $this->_group = $groupName;
+    }
+
+    /**
+     * @return Filesystem
+     */
+    public function getFilesystem()
+    {
+        return $this->_filesystem;
+    }
+
+    /**
+     * @param Filesystem $filesystem
+     */
+    public function setFilesystem($filesystem)
+    {
+        $this->_filesystem = $filesystem;
+    }
+
+    /**
+     * Performs code generation
+     */
+    public function generate()
+    {
+        if ($this->getFilesystem()->exists($this->getServicesDefinitionFile())) {
+            $this->setCurrentCode(
+                file_get_contents($this->getServicesDefinitionFile())
+            );
+        }
+
+        $this->getFilesystem()->dumpFile(
+            $this->getServicesDefinitionFile(),
+            $this->getGeneratedCode()
+        );
     }
 
     /**

@@ -2,16 +2,13 @@
 namespace Maxmode\GeneratorBundle\Command\Sonata\Admin;
 
 use Symfony\Component\Console\Command\Command;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\DialogHelper;
 
-use Symfony\Component\Filesystem\Filesystem;
-
-use Maxmode\GeneratorBundle\Admin\ClassGenerator as AdminClassGenerator;
+use Maxmode\GeneratorBundle\Admin\ClassGenerator;
 use Maxmode\GeneratorBundle\Admin\ServicesGenerator;
 use Maxmode\GeneratorBundle\Entity\Select;
 
@@ -20,12 +17,27 @@ use Maxmode\GeneratorBundle\Entity\Select;
  *
  * @package Maxmode\GeneratorBundle\Command\Sonata\Admin
  */
-class GeneratorCommand extends ContainerAwareCommand
+class GeneratorCommand extends Command
 {
     /**
-     * @var Filesystem
+     * @var ClassGenerator
      */
-    protected $_filesystem;
+    protected $_classGenerator;
+
+    /**
+     * @var ServicesGenerator
+     */
+    protected $_servicesGenerator;
+
+    /**
+     * @var Select
+     */
+    protected $_select;
+
+    /**
+     * @var bool
+     */
+    protected $_silentMode = false;
 
     /**
      * Set Command parameters
@@ -36,7 +48,8 @@ class GeneratorCommand extends ContainerAwareCommand
             ->setDescription('Generator is used to generate Admin class based on entity')
             ->addArgument('entity');
         //todo: write description.
-        //todo first argument is entity name If not set - will be asked
+        //todo: first argument is entity name If not set - will be asked
+        //todo: ask about silent mode
     }
 
     /**
@@ -49,9 +62,41 @@ class GeneratorCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $entityList = $this->getEntitySelect()->getEntityList();
-        $defaultEntity = $this->getEntitySelect()->getFirstEntity();
-        $question = <<<ASK
+        $this->resolveEntityClass($input, $output);
+        $this->resolveListFields($output);
+        $this->resolveEditFields($output);
+
+        if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
+                "Confirm generation of admin class into file '{$this->getClassGenerator()->getAdminFileName()}' ?")) {
+            $this->getClassGenerator()->generate();
+            $output->writeln('Class generated successfully');
+
+            $this->resolveDashboardGroup($output);
+            if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
+                    "Confirm automatic update of services.xml file?")) {
+                $this->resolveServicesXmlFile($output);
+                $this->getServicesGenerator()->generate();
+                $output->writeln('Services file updated successfully');
+            } else {
+                $output->writeln("Please, update services manually. Services xml code: \n"
+                    . $this->getServicesGenerator()->getGeneratedCode());
+            }
+        }
+    }
+
+    /**
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     */
+    protected function resolveEntityClass(InputInterface $input, OutputInterface $output)
+    {
+        $entityClass = $input->getArgument('entity');
+        if ($entityClass) {
+            $this->getEntitySelect()->validateClass($entityClass);
+        } else {
+            $entityList = $this->getEntitySelect()->getEntityList();
+            $defaultEntity = $this->getEntitySelect()->getFirstEntity();
+            $question = <<<ASK
 
 Please, enter the entity class name
 The class name must be the fully-qualified class name without a leading backslash
@@ -59,119 +104,82 @@ The class name must be the fully-qualified class name without a leading backslas
 [$defaultEntity]
 >
 ASK;
-        $entityClass = $input->getArgument('entity');
-        if (!$entityClass) {
-            //todo: ask and validate?
-            $entityClass = $this->getDialog()->ask($output, $question, $defaultEntity, $entityList);
-        }
-        $success = false;
-        while (!$success) {
-            try {
-                $success = $this->getEntitySelect()->validateClass($entityClass);
-            } catch (\Exception $e) {
-                $output->writeln($e->getMessage());
-                $entityClass = $this->getDialog()->ask($output, $question, $defaultEntity, $entityList);
-            }
+            $entityClass = $this->getDialog()->askAndValidate($output, $question,
+                array($this->getEntitySelect(), 'validateClass'), false, $defaultEntity, $entityList);
         }
 
-        $this->getAdminClassGenerator()->setEntityClass($entityClass);
-        $this->getServicesGenerator()->setClassGenerator($this->getAdminClassGenerator());
-
-        $this->generateClass($input, $output);
-
-        if ($this->getDialog()->askConfirmation($output, 'Do you want to generate view functionality? [yes]', true)) {
-            $this->generateList($input, $output);
-        }
-
-        if ($this->getDialog()->askConfirmation($output, 'Do you want to generate CRUD functionality? [yes]', true)) {
-            $this->generateCRUD($input, $output);
-        }
+        $this->getClassGenerator()->setEntityClass($entityClass);
     }
 
     /**
-     * Generate class and services configuration
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     *
-     * @throws \Exception
-     */
-    protected function generateClass(InputInterface $input, OutputInterface $output)
-    {
-        if (!$this->getDialog()->askConfirmation($output, ' Do you want to generate an admin class? [yes]', true)) {
-            return;
-        }
-
-        $this->getServicesGenerator()->setServicesDefinitionFile(
-            $this->getDialog()->ask(
-                $output,
-                "Specify services.xml file location [{$this->getServicesGenerator()->getServicesDefinitionFile()}]",
-                $this->getServicesGenerator()->getServicesDefinitionFile()
-            )
-        );
-
-        $this->getServicesGenerator()->setGroup(
-            $this->getDialog()->ask(
-                $output,
-                "Specify group id for dashboard [{$this->getServicesGenerator()->getGroup()}]",
-                $this->getServicesGenerator()->getGroup()
-            )
-        );
-
-        if ($this->getFilesystem()->exists($this->getServicesGenerator()->getServicesDefinitionFile())) {
-            $this->getServicesGenerator()->setCurrentCode(
-                file_get_contents($this->getServicesGenerator()->getServicesDefinitionFile())
-            );
-        }
-
-        $this->getFilesystem()->dumpFile(
-            $this->getServicesGenerator()->getServicesDefinitionFile(),
-            $this->getServicesGenerator()->getGeneratedCode()
-        );
-
-        $this->getFilesystem()->dumpFile(
-            $this->getAdminClassGenerator()->getAdminFileName(),
-            $this->getAdminClassGenerator()->getGeneratedCode()
-        );
-
-        echo "Class created successfully\n";
-    }
-
-    /**
-     * Generate list view
-     *
-     * @param InputInterface $input
      * @param OutputInterface $output
      */
-    protected function generateList(InputInterface $input, OutputInterface $output)
+    protected function resolveListFields($output)
     {
         $listFields = array();
-        $entityFields = $this->getEntitySelect()->getEntityFields($this->getAdminClassGenerator()->getEntityClass());
-        if ($this->getDialog()->askConfirmation($output, "Do you want to see all entity's fields in the List?")) {
+        $entityFields = $this->getClassGenerator()->getEntityFields();
+        if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
+                "Do you want to have all entity's fields in the List table?")) {
             $listFields = $entityFields;
         } else {
-            $output->writeln("Now you will be asked about each field of entity.\n Set 'y/n' to add field to the List");
+            $output->writeln("You will be asked about each field of entity.\nSet 'y/n' to add field to the List table");
             foreach ($entityFields as $entityField) {
                 if ($this->getDialog()->askConfirmation($output, $entityField . ' ')) {
                     $listFields[] = $entityField;
                 }
             }
         }
-        print_r($listFields);
-        //todo: generate list method
-        echo "List generated successfully\n";
+
+        $this->getClassGenerator()->setListFields($listFields);
     }
 
     /**
-     * Generate CRUD
-     *
-     * @param InputInterface $input
      * @param OutputInterface $output
      */
-    protected function generateCRUD(InputInterface $input, OutputInterface $output)
+    protected function resolveEditFields($output)
     {
-        //todo: generate CRUD method
-        echo "CRUD generated successfully\n";
+        $editFields = array();
+        $entityFields = $this->getClassGenerator()->getEntityFields();
+        if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
+                "Do you want to have all entity's fields in the Create/Edit form?")) {
+            $editFields = $entityFields;
+        } else {
+            $output->writeln("You will be asked about each field of entity.\nSet 'y/n' to add field to the List table");
+            foreach ($entityFields as $entityField) {
+                if ($this->getDialog()->askConfirmation($output, $entityField . ' ')) {
+                    $editFields[] = $entityField;
+                }
+            }
+        }
+
+        $this->getClassGenerator()->setEditFields($editFields);
+    }
+
+    /**
+     * @param OutputInterface $output
+     */
+    protected function resolveDashboardGroup(OutputInterface $output)
+    {
+        if (!$this->_silentMode) {
+            $defaultGroup = $this->getServicesGenerator()->getGroup();
+            $this->getServicesGenerator()->setGroup(
+                $this->getDialog()->ask($output, "Specify group id for dashboard [$defaultGroup]", $defaultGroup)
+            );
+        }
+    }
+
+    /**
+     * @param OutputInterface $output
+     */
+    protected function resolveServicesXmlFile(OutputInterface $output)
+    {
+        if (!$this->_silentMode) {
+            $defaultFile = $this->getServicesGenerator()->getServicesDefinitionFile();
+            $this->getServicesGenerator()->setServicesDefinitionFile(
+                $this->getDialog()->ask($output,
+                    "Specify services.xml file location [$defaultFile]", $defaultFile)
+            );
+        }
     }
 
     /**
@@ -186,24 +194,19 @@ ASK;
     }
 
     /**
-     * @return Filesystem
+     * @return ClassGenerator
      */
-    public function getFilesystem()
+    public function getClassGenerator()
     {
-        if (!$this->_filesystem) {
-            $this->_filesystem = new Filesystem();
-        }
-
-        return $this->_filesystem;
+        return $this->_classGenerator;
     }
 
     /**
-     * @return AdminClassGenerator
+     * @param ClassGenerator $generator
      */
-    public function getAdminClassGenerator()
+    public function setClassGenerator($generator)
     {
-        //todo: make command as a service and inject all dependencies
-        return $this->getContainer()->get('maxmode_generator.admin.class_generator');
+        $this->_classGenerator = $generator;
     }
 
     /**
@@ -211,7 +214,15 @@ ASK;
      */
     public function getServicesGenerator()
     {
-        return $this->getContainer()->get('maxmode_generator.admin.services_generator');
+        return $this->_servicesGenerator;
+    }
+
+    /**
+     * @param ServicesGenerator $generator
+     */
+    public function setServicesGenerator($generator)
+    {
+        $this->_servicesGenerator = $generator;
     }
 
     /**
@@ -219,6 +230,22 @@ ASK;
      */
     public function getEntitySelect()
     {
-        return $this->getContainer()->get('maxmode_generator.entity.select');
+        return $this->_select;
+    }
+
+    /**
+     * @param Select $select
+     */
+    public function setEntitySelect($select)
+    {
+        $this->_select = $select;
+    }
+
+    /**
+     * @param bool $mode
+     */
+    public function setSilentMode($mode)
+    {
+        $this->_silentMode = $mode;
     }
 }

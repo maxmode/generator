@@ -1,6 +1,9 @@
 <?php
 namespace Maxmode\GeneratorBundle\Admin;
 
+use Symfony\Component\Filesystem\Filesystem;
+use Doctrine\ORM\EntityManager;
+
 /**
  * Representation of generated admin class
  *
@@ -12,6 +15,26 @@ class ClassGenerator
      * @var string
      */
     protected $_entityClass;
+
+    /**
+     * @var array
+     */
+    protected $_listFields;
+
+    /**
+     * @var array
+     */
+    protected $_editFields;
+
+    /**
+     * @var Filesystem
+     */
+    protected $_filesystem;
+
+    /**
+     * @var EntityManager
+     */
+    protected $_entityManager;
 
     /**
      * @param string $entityClass
@@ -27,6 +50,57 @@ class ClassGenerator
     public function getEntityClass()
     {
         return $this->_entityClass;
+    }
+
+    /**
+     * @return Filesystem
+     */
+    public function getFilesystem()
+    {
+        return $this->_filesystem;
+    }
+
+    /**
+     * @param Filesystem $filesystem
+     */
+    public function setFilesystem($filesystem)
+    {
+        $this->_filesystem = $filesystem;
+    }
+
+    /**
+     * @param EntityManager $entityManager
+     */
+    public function setEntityManager(EntityManager $entityManager)
+    {
+        $this->_entityManager = $entityManager;
+    }
+
+    /**
+     * @param array $fields
+     */
+    public function setListFields($fields)
+    {
+        $this->_listFields = $fields;
+    }
+
+    /**
+     * @param array $fields
+     */
+    public function setEditFields($fields)
+    {
+        $this->_editFields = $fields;
+    }
+
+    /**
+     * Performs code generation
+     */
+    public function generate()
+    {
+        $this->getFilesystem()->dumpFile(
+            $this->getAdminFileName(),
+            $this->getGeneratedCode()
+        );
     }
 
     /**
@@ -100,7 +174,16 @@ class $className
 }
 
 CLASS;
+        //todo: generate methods code
         return $classCode;
+    }
+
+    /**
+     * @return array
+     */
+    public function getEntityFields()
+    {
+        return $this->_entityManager->getClassMetadata($this->getEntityClass())->getFieldNames();
     }
 
 }
