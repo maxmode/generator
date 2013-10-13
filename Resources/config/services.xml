@@ -19,6 +19,9 @@
             <call method="setEntityManager">
                 <argument type="service" id="doctrine.orm.entity_manager" />
             </call>
+            <call method="setTemplating" >
+                <argument type="service" id="templating" />
+            </call>
         </service>
 
         <service id="maxmode_generator.admin.services_generator" class="%maxmode_generator.admin.services_generator.class%" >
@@ -27,6 +30,9 @@
             </call>
             <call method="setClassGenerator">
                 <argument type="service" id="maxmode_generator.admin.class_generator" />
+            </call>
+            <call method="setTemplating" >
+                <argument type="service" id="templating" />
             </call>
         </service>
 

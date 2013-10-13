@@ -43,7 +43,6 @@ class GeneratorCommandTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->_command = new GeneratorCommand();
-        $this->_command->setSilentMode(true);
 
         $this->_classGenerator = $this->getMockBuilder('Maxmode\GeneratorBundle\Admin\ClassGenerator')
             ->setMethods(array('getEntityFields', 'setEntityClass', 'setListFields', 'setEditFields', 'generate'))
@@ -88,7 +87,8 @@ class GeneratorCommandTest extends \PHPUnit_Framework_TestCase
         $commandTester = new CommandTester($command);
         $commandTester->execute(array(
             'command' => $command->getName(),
-            'entity' => $entityClass
+            'entity' => $entityClass,
+            '-n' => true
         ));
     }
 }

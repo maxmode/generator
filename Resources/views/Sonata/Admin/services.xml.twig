@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+{% block container %}
+
+    <parameters>{% block parameters %}{{ parameters|raw }}
+        <parameter key="{{ parameterKey }}">{{ adminClass }}</parameter>
+{% endblock parameters %}
+    </parameters>
+
+    <services>{% block services %}{{ services|raw }}
+
+        <!-- CRUD for {{ adminClass }} -->
+        <service id="{{ serviceId }}" class="%{{ parameterKey }}%">
+            <tag name="sonata.admin" manager_type="orm" group="{{ group }}" />
+            <argument />
+            <argument>{{ entityClass }}</argument>
+            <argument>SonataAdminBundle:CRUD</argument>
+        </service>
+{% endblock services %}
+    </services>
+{% endblock container %}
+
+</container>

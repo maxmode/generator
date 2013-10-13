@@ -45,11 +45,9 @@ class GeneratorCommand extends Command
     protected function configure()
     {
         $this->setName('maxmode:generate:sonata-admin')
-            ->setDescription('Generator is used to generate Admin class based on entity')
-            ->addArgument('entity');
-        //todo: write description.
-        //todo: first argument is entity name If not set - will be asked
-        //todo: ask about silent mode
+            ->setDescription('Generate CRUD for entity by creating Sonata-Admin class')
+            ->addArgument('entity', null, 'Entity class for witch generate CRUD; will be asked if not provided')
+            ->addOption('services', null, InputOption::VALUE_OPTIONAL, 'Whether update services.xml or not', 1);
     }
 
     /**
@@ -62,6 +60,7 @@ class GeneratorCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->setSilentMode((bool) $input->getOption('no-interaction'));
         $this->resolveEntityClass($input, $output);
         $this->resolveListFields($output);
         $this->resolveEditFields($output);
@@ -72,8 +71,8 @@ class GeneratorCommand extends Command
             $output->writeln('Class generated successfully');
 
             $this->resolveDashboardGroup($output);
-            if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
-                    "Confirm automatic update of services.xml file?")) {
+            if ($input->getOption('services') and $this->_silentMode || $this->getDialog()
+                    ->askConfirmation($output, "Confirm automatic update of services.xml file?")) {
                 $this->resolveServicesXmlFile($output);
                 $this->getServicesGenerator()->generate();
                 $output->writeln('Services file updated successfully');
@@ -81,6 +80,7 @@ class GeneratorCommand extends Command
                 $output->writeln("Please, update services manually. Services xml code: \n"
                     . $this->getServicesGenerator()->getGeneratedCode());
             }
+
         }
     }
 
@@ -91,7 +91,7 @@ class GeneratorCommand extends Command
     protected function resolveEntityClass(InputInterface $input, OutputInterface $output)
     {
         $entityClass = $input->getArgument('entity');
-        if ($entityClass) {
+        if ($entityClass || $this->_silentMode) {
             $this->getEntitySelect()->validateClass($entityClass);
         } else {
             $entityList = $this->getEntitySelect()->getEntityList();

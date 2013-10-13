@@ -2,6 +2,7 @@
 namespace Maxmode\GeneratorBundle\Admin;
 
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Bundle\TwigBundle\Debug\TimedTwigEngine;
 
 use Maxmode\GeneratorBundle\Admin\ClassGenerator;
 
@@ -38,6 +39,27 @@ class ServicesGenerator
     protected $_currentCode = '';
 
     /**
+     * @var TimedTwigEngine
+     */
+    protected $_templating;
+
+    /**
+     * @param TimedTwigEngine $twig
+     */
+    public function setTemplating(TimedTwigEngine $twig)
+    {
+        $this->_templating = $twig;
+    }
+
+    /**
+     * @return TimedTwigEngine
+     */
+    public function getTemplating()
+    {
+        return $this->_templating;
+    }
+
+    /**
      * @return ClassGenerator
      */
     public function getClassGenerator()
@@ -50,23 +72,8 @@ class ServicesGenerator
      */
     public function setClassGenerator(ClassGenerator $classGenerator)
     {
+        //todo: decouple class generator from this class
         $this->_classGenerator = $classGenerator;
-    }
-
-    /**
-     * @param $code
-     */
-    public function setCurrentCode($code)
-    {
-        $this->_currentCode = $code;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCurrentCode()
-    {
-        return $this->_currentCode;
     }
 
     /**
@@ -107,9 +114,7 @@ class ServicesGenerator
     public function generate()
     {
         if ($this->getFilesystem()->exists($this->getServicesDefinitionFile())) {
-            $this->setCurrentCode(
-                file_get_contents($this->getServicesDefinitionFile())
-            );
+            $this->_currentCode = file_get_contents($this->getServicesDefinitionFile());
         }
 
         $this->getFilesystem()->dumpFile(
@@ -147,7 +152,10 @@ class ServicesGenerator
      */
     public function getAdminServiceId()
     {
-        return strtolower(str_replace('\\', '.', $this->getClassGenerator()->getAdminClassName()));
+        $dotDelimited = str_replace('\\', '.', $this->getClassGenerator()->getAdminClassName());
+        $withoutAdmin = preg_replace('#([a-z])Admin#', '\1', $dotDelimited);
+
+        return strtolower($withoutAdmin);
     }
 
     /**
@@ -159,96 +167,41 @@ class ServicesGenerator
     }
 
     /**
-     * @return string
-     */
-    public function getServiceTagString()
-    {
-        $parameter = $this->getAdminServiceClassId();
-        $id = $this->getAdminServiceClassId();
-        $entityClass = $this->getClassGenerator()->getEntityClass();
-        $adminClass = $this->getClassGenerator()->getAdminClassName();
-        $services = <<<XML
-
-        <!-- CRUD for {$adminClass} -->
-        <service id="{$id}" class="%{$parameter}%">
-            <tag name="sonata.admin" manager_type="orm" group="{$this->getGroup()}" />
-            <argument />
-            <argument>{$entityClass}</argument>
-            <argument>SonataAdminBundle:CRUD</argument>
-        </service>
-XML;
-        return $services;
-    }
-
-    public function getParameterTagString()
-    {
-        $parameter = $this->getAdminServiceClassId();
-        $adminClass = $this->getClassGenerator()->getAdminClassName();
-        $parameters = <<<XML
-    <parameter key="{$parameter}">{$adminClass}</parameter>
-XML;
-        return $parameters;
-    }
-
-    /**
      *
      * @return string
      */
     public function getGeneratedCode()
     {
-        if ($this->getCurrentCode()) {
-            $xmlElement = simplexml_load_string($this->getCurrentCode());
-            if (isset($xmlElement->parameters) && isset($xmlElement->services)) {
-                return $this->_appendTags($this->getCurrentCode());
+        $parameters = null;
+        $services = null;
+        if ($this->_currentCode) {
+            $xmlElement = simplexml_load_string($this->_currentCode);
+            /** @var \SimpleXMLElement $tag */
+            foreach ($xmlElement as $tag) {
+                if ($tag->getName() == 'parameters') {
+                    $matches = array();
+                    if (preg_match('#<parameters>(.+)\n\s*</parameters>#ms', $this->_currentCode, $matches)
+                        && isset($matches[1])) {
+                        $parameters = $matches[1];
+                    }
+                } elseif ($tag->getName() == 'services') {
+                    $matches = array();
+                    if (preg_match('#<services>(.+)\n\s*</services>#ms', $this->_currentCode, $matches)
+                        && isset($matches[1])) {
+                        $services = $matches[1];
+                    }
+                }
             }
         }
 
-        return $this->_generateNewFile();
-    }
-
-    /**
-     * @return string
-     */
-    protected function _generateNewFile()
-    {
-        $fileCode = <<<XML
-<?xml version="1.0" ?>
-
-<container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
-
-    <parameters>
-    {$this->getParameterTagString()}
-    </parameters>
-
-    <services>
-        {$this->getServiceTagString()}
-    </services>
-
-</container>
-
-XML;
-        return $fileCode;
-    }
-
-    /**
-     * @param string $currentCode
-     *
-     * @return string
-     */
-    protected function _appendTags($currentCode)
-    {
-        return str_replace(
-            array(
-                '</parameters>',
-                '</services>'
-            ),
-            array(
-                $this->getParameterTagString() . "\n    </parameters>",
-                $this->getServiceTagString() . "\n    </services>"
-            ),
-            $currentCode
-        );
+        return $this->getTemplating()->render('MaxmodeGeneratorBundle:Sonata:Admin/services.xml.twig', array(
+            'parameters' => $parameters,
+            'parameterKey' => $this->getAdminServiceClassId(),
+            'adminClass' => $this->getClassGenerator()->getAdminClassName(),
+            'services' => $services,
+            'serviceId' => $this->getAdminServiceId(),
+            'group' => $this->getGroup(),
+            'entityClass' => $this->getClassGenerator()->getEntityClass(),
+        ));
     }
 }

@@ -1,0 +1,57 @@
+<?php
+{% block namespace %}
+namespace {{ namespace }};
+{% endblock namespace %}
+
+{% block use %}
+use Sonata\AdminBundle\Admin\Admin;
+use Sonata\AdminBundle\Datagrid\ListMapper;
+use Sonata\AdminBundle\Form\FormMapper;
+{% endblock use %}
+
+{% block classHead %}
+/**
+ * Admin user interface for {{ entityClass }}
+*/
+class {{ className }} extends Admin
+{% endblock classHead %}
+{
+    {% block constants %}
+    {% endblock constants %}
+    {% block properties %}
+    {% endblock properties %}
+
+    {%  block methods %}
+    {% block configureListFields %}
+    /**
+     * Items list rendering configuration
+     *
+     * @param ListMapper $listMapper
+     */
+    protected function configureListFields(ListMapper $listMapper)
+    {
+    {# todo: think about max line length #}
+        $listMapper
+        {% for field in listFields %}
+    ->addIdentifier('{{ field.name }}', null, array('label' => '{{ field.key }}'))
+        {% endfor %};
+    }
+    {% endblock configureListFields %}
+
+    {% block configureFormFields %}
+    /**
+    * Form fields configuration
+    *
+    * @param FormMapper $formMapper
+    */
+    protected function configureFormFields(FormMapper $formMapper)
+    {
+        $formMapper
+        {% for field in listFields %}
+    ->add('{{ field.name }}', '{{ field.type }}', array('label' => '{{ field.type }}'))
+        {% endfor %};
+    }
+    {% endblock configureFormFields %}
+    {% endblock methods %}
+
+}

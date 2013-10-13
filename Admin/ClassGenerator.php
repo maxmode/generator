@@ -3,6 +3,7 @@ namespace Maxmode\GeneratorBundle\Admin;
 
 use Symfony\Component\Filesystem\Filesystem;
 use Doctrine\ORM\EntityManager;
+use Symfony\Bundle\TwigBundle\Debug\TimedTwigEngine;
 
 /**
  * Representation of generated admin class
@@ -11,6 +12,8 @@ use Doctrine\ORM\EntityManager;
  */
 class ClassGenerator
 {
+    const MAX_LINE_LENGTH = 120;
+
     /**
      * @var string
      */
@@ -35,6 +38,27 @@ class ClassGenerator
      * @var EntityManager
      */
     protected $_entityManager;
+
+    /**
+     * @var TimedTwigEngine
+     */
+    protected $_templating;
+
+    /**
+     * @param TimedTwigEngine $twig
+     */
+    public function setTemplating(TimedTwigEngine $twig)
+    {
+        $this->_templating = $twig;
+    }
+
+    /**
+     * @return TimedTwigEngine
+     */
+    public function getTemplating()
+    {
+        return $this->_templating;
+    }
 
     /**
      * @param string $entityClass
@@ -143,6 +167,8 @@ class ClassGenerator
     }
 
     /**
+     * Return generated code as text
+     *
      * @return string
      * @throws \Exception
      */
@@ -152,38 +178,75 @@ class ClassGenerator
         if (class_exists($adminClass)) {
             throw new \Exception('Impossible to generate. Class ' . $adminClass . ' already exists.');
         }
-        //create class
         $namespaceParts = explode('\\', $adminClass);
         if (isset($namespaceParts[0]) && $namespaceParts[0] == '') {
             array_shift($namespaceParts);
         }
-        $className = array_pop($namespaceParts);
-        $namespace = implode('\\', $namespaceParts);
 
-        //todo: use template to store file source
-        $classCode = <<<CLASS
-<?php
-namespace $namespace;
+        return $this->getTemplating()->render('MaxmodeGeneratorBundle:Sonata:Admin/class.php.twig', array(
+            'className' => array_pop($namespaceParts),
+            'namespace' => implode('\\', $namespaceParts),
+            'entityClass' => $this->getEntityClass(),
+            'editFields' => $this->prepareFieldList($this->_editFields),
+            'listFields' => $this->prepareFieldList($this->_listFields),
+            'maxLineLength' => self::MAX_LINE_LENGTH,
+        ));
 
-/**
- * Admin user interface for {$this->getEntityClass()}
- */
-class $className
-{
-
-}
-
-CLASS;
-        //todo: generate methods code
-        return $classCode;
     }
 
     /**
+     * @param array $fieldList
+     * @return array
+     */
+    protected function prepareFieldList($fieldList)
+    {
+        $list = array();
+        foreach ($fieldList as $fieldName) {
+            $list[] = array(
+                'name' => $fieldName,
+                'type' => $this->getFieldType($fieldName),
+                'key' => $this->getFieldTranslationKey($fieldName),
+            );
+        }
+
+        return $list;
+    }
+
+    /**
+     * List of field names
+     *
      * @return array
      */
     public function getEntityFields()
     {
         return $this->_entityManager->getClassMetadata($this->getEntityClass())->getFieldNames();
+    }
+
+    /**
+     * Type of field
+     *
+     * @param string $fieldName
+     * @return \Doctrine\DBAL\Types\Type|string
+     */
+    public function getFieldType($fieldName)
+    {
+        return $this->_entityManager->getClassMetadata($this->getEntityClass())->getTypeOfField($fieldName);
+    }
+
+    /**
+     * Calculate translation key for a field
+     *
+     * @param $fieldName
+     * @return string
+     */
+    protected function getFieldTranslationKey($fieldName)
+    {
+        $namespaceName = $this->getAdminClassName() . '\\' . $fieldName;
+        $underlinedName = strtolower(preg_replace('#([a-z])([A-Z])#', '\1_\2', $namespaceName));
+        $dotDelimitedName = str_replace('\\', '.', $underlinedName);
+        $adminKey = str_replace('_admin', '', $dotDelimitedName);
+
+        return $adminKey;
     }
 
 }
