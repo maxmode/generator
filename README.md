@@ -36,3 +36,7 @@ OR add following string to your composer.json manually
 ```
     php app/console maxmode:generate:sonata-admin
 ```
+
+## Stability
+
+[![Build Status](https://travis-ci.org/maxmode/generator.png)](https://travis-ci.org/maxmode/generator)
