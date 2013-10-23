@@ -48,7 +48,7 @@ class {{ className }} extends Admin
     {
         $formMapper
         {% for field in editFields %}
-    ->add('{{ field.name }}', '{{ field.type }}', array('label' => '{{ field.type }}'))
+    ->add('{{ field.name }}', null, array('label' => '{{ field.type }}'))
         {% endfor %};
     }
 {% endblock configureFormFields %}

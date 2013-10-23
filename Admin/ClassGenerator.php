@@ -196,6 +196,7 @@ class ClassGenerator
 
     /**
      * @param array $fieldList
+     *
      * @return array
      */
     protected function prepareFieldList($fieldList)
@@ -226,6 +227,7 @@ class ClassGenerator
      * Type of field
      *
      * @param string $fieldName
+     *
      * @return \Doctrine\DBAL\Types\Type|string
      */
     public function getFieldType($fieldName)
@@ -236,7 +238,8 @@ class ClassGenerator
     /**
      * Calculate translation key for a field
      *
-     * @param $fieldName
+     * @param string $fieldName
+     *
      * @return string
      */
     protected function getFieldTranslationKey($fieldName)
