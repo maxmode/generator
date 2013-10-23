@@ -8,7 +8,11 @@ The command generates code based on Doctrine entities metadata.
 
 ## Installation
 
-1. Add dependency to composer.json file of your project:
+1. Add dependency to your project via composer:
+```
+    php composer.phar require "maxmode/generator":"dev-master"
+```
+OR add following string to your composer.json manually
 ```
     "maxmode/generator": "dev-master"
 ```

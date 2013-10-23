@@ -16,13 +16,13 @@ use Sonata\AdminBundle\Form\FormMapper;
 class {{ className }} extends Admin
 {% endblock classHead %}
 {
-    {% block constants %}
-    {% endblock constants %}
-    {% block properties %}
-    {% endblock properties %}
+{% block constants %}
+{% endblock constants %}
+{% block properties %}
+{% endblock properties %}
 
-    {%  block methods %}
-    {% block configureListFields %}
+{%  block methods %}
+{% block configureListFields %}
     /**
      * Items list rendering configuration
      *
@@ -36,22 +36,22 @@ class {{ className }} extends Admin
     ->addIdentifier('{{ field.name }}', null, array('label' => '{{ field.key }}'))
         {% endfor %};
     }
-    {% endblock configureListFields %}
+{% endblock configureListFields %}
 
-    {% block configureFormFields %}
+{% block configureFormFields %}
     /**
-    * Form fields configuration
-    *
-    * @param FormMapper $formMapper
-    */
+     * Form fields configuration
+     *
+     * @param FormMapper $formMapper
+     */
     protected function configureFormFields(FormMapper $formMapper)
     {
         $formMapper
-        {% for field in listFields %}
+        {% for field in editFields %}
     ->add('{{ field.name }}', '{{ field.type }}', array('label' => '{{ field.type }}'))
         {% endfor %};
     }
-    {% endblock configureFormFields %}
-    {% endblock methods %}
+{% endblock configureFormFields %}
+{% endblock methods %}
 
 }

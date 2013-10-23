@@ -11,15 +11,35 @@
     "minimum-stability": "dev",
     "require": {
         "php": ">=5.3.2",
+        "sonata-project/admin-bundle": "2.2.*@dev",
+        "sonata-project/doctrine-orm-admin-bundle": "2.2.*@dev",
+        "sonata-project/block-bundle": "2.2.*@dev",
+        "knplabs/knp-menu-bundle": "1.1.x-dev",
         "doctrine/orm": ">=2.2.3,<2.4-dev",
+        "doctrine/doctrine-bundle": "1.2.*",
+        "symfony/doctrine-bridge": "~2.2",
         "symfony/framework-bundle": "~2.2",
+        "symfony/symfony": "2.3.*",
         "symfony/console": "~2.0"
     },
     "require-dev": {
-        "symfony/doctrine-bridge": "~2.2"
+        "sensio/distribution-bundle": "2.3.*",
+        "sensio/framework-extra-bundle": "2.3.*",
+        "sensio/generator-bundle": "2.3.*"
     },
     "autoload": {
-        "psr-0": { "Maxmode\\GeneratorBundle\\": "" }
+        "psr-0": { "Maxmode\\GeneratorBundle\\": "", "TestVendor\\": "Tests/src/" }
     },
-    "target-dir": "Maxmode/GeneratorBundle"
+    "target-dir": "Maxmode/GeneratorBundle",
+    "scripts": {
+        "post-install-cmd": [
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::buildBootstrap"
+        ],
+        "post-update-cmd": [
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::buildBootstrap"
+        ]
+    },
+    "extra": {
+        "symfony-app-dir": "Tests/app"
+    }
 }

@@ -1,5 +1,5 @@
 <?php
-namespace Maxmode\GeneratorBundle\Tests\Command\Sonata\Admin;
+namespace Maxmode\GeneratorBundle\Tests\Unit\Command\Sonata\Admin;
 
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -13,6 +13,8 @@ use Maxmode\GeneratorBundle\Command\Sonata\Admin\GeneratorCommand;
  * Functional test for  GeneratorCommand
  *
  * @package Maxmode\GeneratorBundle\Tests\Command\Sonata\Admin
+ *
+ * @group unit
  */
 class GeneratorCommandTest extends \PHPUnit_Framework_TestCase
 {

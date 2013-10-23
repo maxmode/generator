@@ -1,0 +1,6 @@
+app/AppKernel.php
+app/bootstrap.php.cache
+app/logs
+app/cache
+app/config/parameters.yml
+app/config/routing.yml

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- http://www.phpunit.de/manual/current/en/appendixes.configuration.html -->
+<phpunit colors = "true" bootstrap = "bootstrap.php.cache" >
+
+    <testsuites>
+        <testsuite name="Unit tests">
+            <directory>../../Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Functional tests">
+            <directory>../../Tests/Functional</directory>
+        </testsuite>
+    </testsuites>
+
+</phpunit>

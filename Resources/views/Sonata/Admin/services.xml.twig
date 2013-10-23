@@ -14,7 +14,8 @@
 
         <!-- CRUD for {{ adminClass }} -->
         <service id="{{ serviceId }}" class="%{{ parameterKey }}%">
-            <tag name="sonata.admin" manager_type="orm" group="{{ group }}" />
+            <tag name="sonata.admin" manager_type="orm" group="{{ group }}" label_catalogue="messages"
+                 label="{{ serviceId }}" />
             <argument />
             <argument>{{ entityClass }}</argument>
             <argument>SonataAdminBundle:CRUD</argument>
