@@ -1,4 +1,4 @@
 . build.sh
 
 # Run tests
-phpunit -c Tests/App/phpunit.xml
+phpunit -c Tests/app/phpunit.xml
