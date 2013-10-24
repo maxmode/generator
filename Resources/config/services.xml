@@ -5,14 +5,17 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="maxmode_generator.admin.class_generator.class">Maxmode\GeneratorBundle\Admin\ClassGenerator</parameter>
-        <parameter key="maxmode_generator.admin.services_generator.class">Maxmode\GeneratorBundle\Admin\ServicesGenerator</parameter>
+        <parameter key="maxmode_generator.generator.admin_class.class">Maxmode\GeneratorBundle\Generator\AdminClass</parameter>
+        <parameter key="maxmode_generator.generator.services.class">Maxmode\GeneratorBundle\Generator\Services</parameter>
+        <parameter key="maxmode_generator.generator.translation.class">Maxmode\GeneratorBundle\Generator\Translation</parameter>
         <parameter key="maxmode_generator.entity.select.class">Maxmode\GeneratorBundle\Entity\Select</parameter>
         <parameter key="maxmode_generator.sonata_admin.generator.class">Maxmode\GeneratorBundle\Command\Sonata\Admin\GeneratorCommand</parameter>
     </parameters>
 
     <services>
-        <service id="maxmode_generator.admin.class_generator" class="%maxmode_generator.admin.class_generator.class%" >
+        <service id="maxmode_generator.generator.translation" class="%maxmode_generator.generator.translation.class%" />
+
+        <service id="maxmode_generator.generator.admin_class" class="%maxmode_generator.generator.admin_class.class%" >
             <call method="setFilesystem">
                 <argument type="service" id="filesystem" />
             </call>
@@ -22,17 +25,23 @@
             <call method="setTemplating" >
                 <argument type="service" id="templating" />
             </call>
+            <call method="setTranslation" >
+                <argument type="service" id="maxmode_generator.generator.translation" />
+            </call>
         </service>
 
-        <service id="maxmode_generator.admin.services_generator" class="%maxmode_generator.admin.services_generator.class%" >
+        <service id="maxmode_generator.generator.services" class="%maxmode_generator.generator.services.class%" >
             <call method="setFilesystem">
                 <argument type="service" id="filesystem" />
             </call>
             <call method="setClassGenerator">
-                <argument type="service" id="maxmode_generator.admin.class_generator" />
+                <argument type="service" id="maxmode_generator.generator.admin_class" />
             </call>
             <call method="setTemplating" >
                 <argument type="service" id="templating" />
+            </call>
+            <call method="setTranslation" >
+                <argument type="service" id="maxmode_generator.generator.translation" />
             </call>
         </service>
 
@@ -41,17 +50,17 @@
                 <argument type="service" id="doctrine.orm.entity_manager" />
             </call>
             <call method="setClassGenerator">
-                <argument type="service" id="maxmode_generator.admin.class_generator" />
+                <argument type="service" id="maxmode_generator.generator.admin_class" />
             </call>
         </service>
 
         <!--Generator command-->
         <service id="maxmode_generator.sonata_admin.generator" class="%maxmode_generator.sonata_admin.generator.class%" >
             <call method="setClassGenerator">
-                <argument type="service" id="maxmode_generator.admin.class_generator" />
+                <argument type="service" id="maxmode_generator.generator.admin_class" />
             </call>
             <call method="setServicesGenerator">
-                <argument type="service" id="maxmode_generator.admin.services_generator" />
+                <argument type="service" id="maxmode_generator.generator.services" />
             </call>
             <call method="setEntitySelect">
                 <argument type="service" id="maxmode_generator.entity.select" />

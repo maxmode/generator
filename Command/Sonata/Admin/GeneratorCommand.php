@@ -8,8 +8,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\DialogHelper;
 
-use Maxmode\GeneratorBundle\Admin\ClassGenerator;
-use Maxmode\GeneratorBundle\Admin\ServicesGenerator;
+use Maxmode\GeneratorBundle\Generator\AdminClass as ClassGenerator;
+use Maxmode\GeneratorBundle\Generator\Services as ServicesGenerator;
 use Maxmode\GeneratorBundle\Entity\Select;
 
 /**
@@ -53,7 +53,7 @@ class GeneratorCommand extends Command
     /**
      * Command execution
      *
-     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @param \Symfony\Component\Console\Input\InputInterface   $input
      * @param \Symfony\Component\Console\Output\OutputInterface $output
      *
      * @return int|null|void
@@ -66,7 +66,7 @@ class GeneratorCommand extends Command
         $this->resolveEditFields($output);
 
         if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
-                "Confirm generation of admin class into file '{$this->getClassGenerator()->getAdminFileName()}' ?")) {
+            "Confirm generation of admin class into file '{$this->getClassGenerator()->getAdminFileName()}' ?")) {
             $this->getClassGenerator()->generate();
             $output->writeln('Class generated successfully');
 
@@ -119,7 +119,7 @@ ASK;
         $listFields = array();
         $entityFields = $this->getClassGenerator()->getEntityFields();
         if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
-                "Do you want to have all entity's fields in the List table?")) {
+            "Do you want to have all entity's fields in the List table?")) {
             $listFields = $entityFields;
         } else {
             $output->writeln("You will be asked about each field of entity.\nSet 'y/n' to add field to the List table");
@@ -141,7 +141,7 @@ ASK;
         $editFields = array();
         $entityFields = $this->getClassGenerator()->getEntityFields();
         if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
-                "Do you want to have all entity's fields in the Create/Edit form?")) {
+            "Do you want to have all entity's fields in the Create/Edit form?")) {
             $editFields = $entityFields;
         } else {
             $output->writeln("You will be asked about each field of entity.\nSet 'y/n' to add field to the List table");

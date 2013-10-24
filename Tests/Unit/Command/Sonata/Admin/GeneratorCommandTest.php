@@ -4,8 +4,8 @@ namespace Maxmode\GeneratorBundle\Tests\Unit\Command\Sonata\Admin;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
-use Maxmode\GeneratorBundle\Admin\ClassGenerator;
-use Maxmode\GeneratorBundle\Admin\ServicesGenerator;
+use Maxmode\GeneratorBundle\Generator\AdminClass as ClassGenerator;
+use Maxmode\GeneratorBundle\Generator\Services as ServicesGenerator;
 use Maxmode\GeneratorBundle\Entity\Select;
 use Maxmode\GeneratorBundle\Command\Sonata\Admin\GeneratorCommand;
 

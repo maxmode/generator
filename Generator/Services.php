@@ -1,20 +1,19 @@
 <?php
-namespace Maxmode\GeneratorBundle\Admin;
+namespace Maxmode\GeneratorBundle\Generator;
 
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Bundle\TwigBundle\Debug\TimedTwigEngine;
 
-use Maxmode\GeneratorBundle\Admin\ClassGenerator;
+use Maxmode\GeneratorBundle\Generator\AdminClass;
+use Maxmode\GeneratorBundle\Generator\Translation;
 
 /**
  * ServicesGenerator is responsible for generating services definition
- *
- * @package Maxmode\GeneratorBundle\Admin
  */
-class ServicesGenerator
+class Services
 {
     /**
-     * @var ClassGenerator
+     * @var AdminClass
      */
     protected $_classGenerator;
 
@@ -44,6 +43,11 @@ class ServicesGenerator
     protected $_templating;
 
     /**
+     * @var Translation
+     */
+    protected $_translator;
+
+    /**
      * @param TimedTwigEngine $twig
      */
     public function setTemplating(TimedTwigEngine $twig)
@@ -60,7 +64,7 @@ class ServicesGenerator
     }
 
     /**
-     * @return ClassGenerator
+     * @return AdminClass
      */
     public function getClassGenerator()
     {
@@ -68,11 +72,10 @@ class ServicesGenerator
     }
 
     /**
-     * @param ClassGenerator $classGenerator
+     * @param AdminClass $classGenerator
      */
-    public function setClassGenerator(ClassGenerator $classGenerator)
+    public function setClassGenerator(AdminClass $classGenerator)
     {
-        //todo: decouple class generator from this class
         $this->_classGenerator = $classGenerator;
     }
 
@@ -150,7 +153,7 @@ class ServicesGenerator
     /**
      * @return string
      */
-    public function getAdminServiceId()
+    protected function getAdminServiceId()
     {
         $dotDelimited = str_replace('\\', '.', $this->getClassGenerator()->getAdminClassName());
         $withoutAdmin = preg_replace('#([a-z])Admin#', '\1', $dotDelimited);
@@ -161,13 +164,12 @@ class ServicesGenerator
     /**
      * @return string
      */
-    public function getAdminServiceClassId()
+    protected function getAdminServiceClassId()
     {
         return $this->getAdminServiceId() . '.class';
     }
 
     /**
-     *
      * @return string
      */
     public function getGeneratedCode()
@@ -202,6 +204,15 @@ class ServicesGenerator
             'serviceId' => $this->getAdminServiceId(),
             'group' => $this->getGroup(),
             'entityClass' => $this->getClassGenerator()->getEntityClass(),
+            'adminCaption' => $this->_translator->getAdminClassKey($this->getClassGenerator()->getAdminClassName())
         ));
+    }
+
+    /**
+     * @param Translation $translation
+     */
+    public function setTranslation(Translation $translation)
+    {
+        $this->_translator = $translation;
     }
 }

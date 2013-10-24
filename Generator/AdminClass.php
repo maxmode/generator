@@ -1,16 +1,16 @@
 <?php
-namespace Maxmode\GeneratorBundle\Admin;
+namespace Maxmode\GeneratorBundle\Generator;
 
 use Symfony\Component\Filesystem\Filesystem;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\TwigBundle\Debug\TimedTwigEngine;
 
+use Maxmode\GeneratorBundle\Generator\Translation;
+
 /**
  * Representation of generated admin class
- *
- * @package Maxmode\GeneratorBundle\Admin
  */
-class ClassGenerator
+class AdminClass
 {
     const MAX_LINE_LENGTH = 120;
 
@@ -43,6 +43,11 @@ class ClassGenerator
      * @var TimedTwigEngine
      */
     protected $_templating;
+
+    /**
+     * @var Translation
+     */
+    protected $_translator;
 
     /**
      * @param TimedTwigEngine $twig
@@ -154,7 +159,6 @@ class ClassGenerator
      */
     public function getAdminFileName()
     {
-        //todo: check on windows
         $r = new \ReflectionClass($this->getEntityClass());
 
         return str_replace(array(
@@ -191,7 +195,6 @@ class ClassGenerator
             'listFields' => $this->prepareFieldList($this->_listFields),
             'maxLineLength' => self::MAX_LINE_LENGTH,
         ));
-
     }
 
     /**
@@ -206,7 +209,7 @@ class ClassGenerator
             $list[] = array(
                 'name' => $fieldName,
                 'type' => $this->getFieldType($fieldName),
-                'key' => $this->getFieldTranslationKey($fieldName),
+                'key' => $this->_translator->getAdminFieldKey($this->getAdminClassName(), $fieldName),
             );
         }
 
@@ -236,20 +239,11 @@ class ClassGenerator
     }
 
     /**
-     * Calculate translation key for a field
-     *
-     * @param string $fieldName
-     *
-     * @return string
+     * @param Translation $translation
      */
-    protected function getFieldTranslationKey($fieldName)
+    public function setTranslation(Translation $translation)
     {
-        $namespaceName = $this->getAdminClassName() . '\\' . $fieldName;
-        $underlinedName = strtolower(preg_replace('#([a-z])([A-Z])#', '\1_\2', $namespaceName));
-        $dotDelimitedName = str_replace('\\', '.', $underlinedName);
-        $adminKey = str_replace('_admin', '', $dotDelimitedName);
-
-        return $adminKey;
+        $this->_translator = $translation;
     }
 
 }

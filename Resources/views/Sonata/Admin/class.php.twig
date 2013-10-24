@@ -30,11 +30,15 @@ class {{ className }} extends Admin
      */
     protected function configureListFields(ListMapper $listMapper)
     {
-    {# todo: think about max line length #}
         $listMapper
-        {% for field in listFields %}
-    ->addIdentifier('{{ field.name }}', null, array('label' => '{{ field.key }}'))
-        {% endfor %};
+{% for field in listFields %}{% if (field.name|length + field.key|length) > 60 %}
+            ->addIdentifier('{{ field.name }}', null,
+                array('label' => '{{ field.key }}')){% if loop.last %};{% endif %}
+
+{% else %}
+            ->addIdentifier('{{ field.name }}', null, array('label' => '{{ field.key }}')){% if loop.last %};{% endif %}
+
+{% endif %}{% endfor %}
     }
 {% endblock configureListFields %}
 
@@ -47,9 +51,14 @@ class {{ className }} extends Admin
     protected function configureFormFields(FormMapper $formMapper)
     {
         $formMapper
-        {% for field in editFields %}
-    ->add('{{ field.name }}', null, array('label' => '{{ field.type }}'))
-        {% endfor %};
+{% for field in editFields %}{% if (field.name|length + field.key|length) > 70 %}
+            ->add('{{ field.name }}', null,
+                array('label' => '{{ field.key }}')){% if loop.last %};{% endif %}
+
+{% else %}
+            ->add('{{ field.name }}', null, array('label' => '{{ field.key }}')){% if loop.last %};{% endif %}
+
+{% endif %}{% endfor %}
     }
 {% endblock configureFormFields %}
 {% endblock methods %}

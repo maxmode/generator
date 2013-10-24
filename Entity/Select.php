@@ -4,8 +4,11 @@ namespace Maxmode\GeneratorBundle\Entity;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 
-use Maxmode\GeneratorBundle\Admin\ClassGenerator;
+use Maxmode\GeneratorBundle\Generator\AdminClass as ClassGenerator;
 
+/**
+ * Class Seeking for entities
+ */
 class Select
 {
     /**
