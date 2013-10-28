@@ -6,8 +6,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 use Maxmode\GeneratorBundle\Generator\AdminClass as ClassGenerator;
 use Maxmode\GeneratorBundle\Generator\Services as ServicesGenerator;
-use Maxmode\GeneratorBundle\Entity\Select;
+use Maxmode\GeneratorBundle\Doctrine\Entity\Select;
 use Maxmode\GeneratorBundle\Command\Sonata\Admin\GeneratorCommand;
+use Maxmode\GeneratorBundle\Doctrine\Entity\Item;
 
 /**
  * Functional test for  GeneratorCommand
@@ -35,6 +36,11 @@ class GeneratorCommandTest extends \PHPUnit_Framework_TestCase
     protected $_servicesGenerator;
 
     /**
+     * @var Item | \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $_entityItem;
+
+    /**
      * @var Select | \PHPUnit_Framework_MockObject_MockObject
      */
     protected $_select;
@@ -47,19 +53,24 @@ class GeneratorCommandTest extends \PHPUnit_Framework_TestCase
         $this->_command = new GeneratorCommand();
 
         $this->_classGenerator = $this->getMockBuilder('Maxmode\GeneratorBundle\Admin\ClassGenerator')
-            ->setMethods(array('getEntityFields', 'setEntityClass', 'setListFields', 'setEditFields', 'generate'))
+            ->setMethods(array('getEntityFields', 'setListFields', 'setEditFields', 'generate', 'setEntityItem'))
             ->getMock();
         $this->_command->setClassGenerator($this->_classGenerator);
 
         $this->_servicesGenerator = $this->getMockBuilder('Maxmode\GeneratorBundle\Admin\ServicesGenerator')
-            ->setMethods(array('generate'))
+            ->setMethods(array('generate', 'setEntityItem', 'setClassGenerator'))
             ->getMock();
         $this->_command->setServicesGenerator($this->_servicesGenerator);
 
-        $this->_select = $this->getMockBuilder('Maxmode\GeneratorBundle\Entity\Select')
+        $this->_select = $this->getMockBuilder('Maxmode\GeneratorBundle\Doctrine\Entity\Select')
             ->setMethods(array('validateClass'))
             ->getMock();
         $this->_command->setEntitySelect($this->_select);
+
+        $this->_entityItem = $this->getMockBuilder('Maxmode\GeneratorBundle\Doctrine\Entity\Item')
+            ->setMethods(array('getEntityFields'))
+            ->getMock();
+        $this->_command->setEntityItem($this->_entityItem);
     }
 
     /**
@@ -73,15 +84,17 @@ class GeneratorCommandTest extends \PHPUnit_Framework_TestCase
         $this->_select->expects($this->once())->method('validateClass')->with($entityClass)
             ->will($this->returnValue($entityClass));
 
-        $this->_classGenerator->expects($this->exactly(2))
+        $this->_entityItem->expects($this->exactly(2))
             ->method('getEntityFields')
             ->will($this->returnValue($fields));
-        $this->_classGenerator->expects($this->once())->method('setEntityClass')->with($entityClass);
         $this->_classGenerator->expects($this->once())->method('setListFields')->with($fields);
         $this->_classGenerator->expects($this->once())->method('setEditFields')->with($fields);
         $this->_classGenerator->expects($this->once())->method('generate');
+        $this->_classGenerator->expects($this->once())->method('setEntityItem')->with($this->_entityItem);
 
         $this->_servicesGenerator->expects($this->once())->method('generate');
+        $this->_servicesGenerator->expects($this->once())->method('setEntityItem')->with($this->_entityItem);
+        $this->_servicesGenerator->expects($this->once())->method('setClassGenerator')->with($this->_classGenerator);
 
         $application = new Application();
         $application->add($this->_command);

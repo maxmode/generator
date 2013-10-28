@@ -31,7 +31,7 @@ class {{ className }} extends Admin
     protected function configureListFields(ListMapper $listMapper)
     {
         $listMapper
-{% for field in listFields %}{% if (field.name|length + field.key|length) > 60 %}
+{% for field in listFields %}{% if (field.name|length + field.key|length) > (maxLineLength - 60) %}
             ->addIdentifier('{{ field.name }}', null,
                 array('label' => '{{ field.key }}')){% if loop.last %};{% endif %}
 
@@ -51,7 +51,7 @@ class {{ className }} extends Admin
     protected function configureFormFields(FormMapper $formMapper)
     {
         $formMapper
-{% for field in editFields %}{% if (field.name|length + field.key|length) > 70 %}
+{% for field in editFields %}{% if (field.name|length + field.key|length) > (maxLineLength - 50) %}
             ->add('{{ field.name }}', null,
                 array('label' => '{{ field.key }}')){% if loop.last %};{% endif %}
 

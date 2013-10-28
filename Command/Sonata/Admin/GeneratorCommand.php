@@ -10,7 +10,8 @@ use Symfony\Component\Console\Helper\DialogHelper;
 
 use Maxmode\GeneratorBundle\Generator\AdminClass as ClassGenerator;
 use Maxmode\GeneratorBundle\Generator\Services as ServicesGenerator;
-use Maxmode\GeneratorBundle\Entity\Select;
+use Maxmode\GeneratorBundle\Doctrine\Entity\Select;
+use Maxmode\GeneratorBundle\Doctrine\Entity\Item;
 
 /**
  * Class GeneratorCommand
@@ -33,6 +34,11 @@ class GeneratorCommand extends Command
      * @var Select
      */
     protected $_select;
+
+    /**
+     * @var Item
+     */
+    protected $_entityItem;
 
     /**
      * @var bool
@@ -60,27 +66,35 @@ class GeneratorCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->setSilentMode((bool) $input->getOption('no-interaction'));
-        $this->resolveEntityClass($input, $output);
-        $this->resolveListFields($output);
-        $this->resolveEditFields($output);
+        try {
+            $this->setSilentMode((bool) $input->getOption('no-interaction'));
+            $this->resolveEntityClass($input, $output);
+            $this->resolveListFields($output);
+            $this->resolveEditFields($output);
 
-        if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
-            "Confirm generation of admin class into file '{$this->getClassGenerator()->getAdminFileName()}' ?")) {
-            $this->getClassGenerator()->generate();
-            $output->writeln('Class generated successfully');
+            if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
+                "Confirm generation of admin class into file '{$this->getClassGenerator()->getAdminFileName()}' ?")) {
+                $this->getClassGenerator()->setEntityItem($this->getEntityItem());
+                $this->getClassGenerator()->generate();
+                $output->writeln('Class generated successfully');
 
-            $this->resolveDashboardGroup($output);
-            if ($input->getOption('services') and $this->_silentMode || $this->getDialog()
-                    ->askConfirmation($output, "Confirm automatic update of services.xml file?")) {
-                $this->resolveServicesXmlFile($output);
-                $this->getServicesGenerator()->generate();
-                $output->writeln('Services file updated successfully');
-            } else {
-                $output->writeln("Please, update services manually. Services xml code: \n"
-                    . $this->getServicesGenerator()->getGeneratedCode());
+                $this->resolveDashboardGroup($output);
+                if ($input->getOption('services') and $this->_silentMode || $this->getDialog()
+                        ->askConfirmation($output, "Confirm automatic update of services.xml file?")) {
+                    $this->resolveServicesXmlFile($output);
+                    $this->getServicesGenerator()->setEntityItem($this->getEntityItem());
+                    $this->getServicesGenerator()->setClassGenerator($this->getClassGenerator());
+                    $this->getServicesGenerator()->generate();
+                    $output->writeln('Services file updated successfully');
+                } else {
+                    $output->writeln("Please, update services manually. Services xml code: \n"
+                        . $this->getServicesGenerator()->getGeneratedCode());
+                }
+
             }
-
+        } catch (\Exception $e) {
+            $output->writeln($e->getMessage());
+            $output->writeln($e->getTraceAsString());
         }
     }
 
@@ -108,7 +122,7 @@ ASK;
                 array($this->getEntitySelect(), 'validateClass'), false, $defaultEntity, $entityList);
         }
 
-        $this->getClassGenerator()->setEntityClass($entityClass);
+        $this->getEntityItem()->setItemClassName($entityClass);
     }
 
     /**
@@ -117,7 +131,7 @@ ASK;
     protected function resolveListFields($output)
     {
         $listFields = array();
-        $entityFields = $this->getClassGenerator()->getEntityFields();
+        $entityFields = $this->getEntityItem()->getEntityFields();
         if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
             "Do you want to have all entity's fields in the List table?")) {
             $listFields = $entityFields;
@@ -139,7 +153,7 @@ ASK;
     protected function resolveEditFields($output)
     {
         $editFields = array();
-        $entityFields = $this->getClassGenerator()->getEntityFields();
+        $entityFields = $this->getEntityItem()->getEntityFields();
         if ($this->_silentMode || $this->getDialog()->askConfirmation($output,
             "Do you want to have all entity's fields in the Create/Edit form?")) {
             $editFields = $entityFields;
@@ -247,5 +261,21 @@ ASK;
     public function setSilentMode($mode)
     {
         $this->_silentMode = $mode;
+    }
+
+    /**
+     * @param \Maxmode\GeneratorBundle\Doctrine\Entity\Item $entityItem
+     */
+    public function setEntityItem($entityItem)
+    {
+        $this->_entityItem = $entityItem;
+    }
+
+    /**
+     * @return \Maxmode\GeneratorBundle\Doctrine\Entity\Item
+     */
+    public function getEntityItem()
+    {
+        return $this->_entityItem;
     }
 }

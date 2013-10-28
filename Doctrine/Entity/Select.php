@@ -1,5 +1,5 @@
 <?php
-namespace Maxmode\GeneratorBundle\Entity;
+namespace Maxmode\GeneratorBundle\Doctrine\Entity;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -80,8 +80,8 @@ class Select
     public function getFirstEntity()
     {
         $entityList = $this->getEntityList();
-        if (isset($entityList[0])) {
-            return $entityList[0];
+        if (current($entityList) !== false) {
+            return current($entityList);
         }
     }
 

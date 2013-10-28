@@ -2,10 +2,10 @@
 namespace Maxmode\GeneratorBundle\Generator;
 
 use Symfony\Component\Filesystem\Filesystem;
-use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\TwigBundle\Debug\TimedTwigEngine;
 
 use Maxmode\GeneratorBundle\Generator\Translation;
+use Maxmode\GeneratorBundle\Doctrine\Entity\Item;
 
 /**
  * Representation of generated admin class
@@ -15,9 +15,9 @@ class AdminClass
     const MAX_LINE_LENGTH = 120;
 
     /**
-     * @var string
+     * @var Item
      */
-    protected $_entityClass;
+    protected $_entityItem;
 
     /**
      * @var array
@@ -33,11 +33,6 @@ class AdminClass
      * @var Filesystem
      */
     protected $_filesystem;
-
-    /**
-     * @var EntityManager
-     */
-    protected $_entityManager;
 
     /**
      * @var TimedTwigEngine
@@ -66,22 +61,6 @@ class AdminClass
     }
 
     /**
-     * @param string $entityClass
-     */
-    public function setEntityClass($entityClass)
-    {
-        $this->_entityClass = $entityClass;
-    }
-
-    /**
-     * @return string
-     */
-    public function getEntityClass()
-    {
-        return $this->_entityClass;
-    }
-
-    /**
      * @return Filesystem
      */
     public function getFilesystem()
@@ -95,14 +74,6 @@ class AdminClass
     public function setFilesystem($filesystem)
     {
         $this->_filesystem = $filesystem;
-    }
-
-    /**
-     * @param EntityManager $entityManager
-     */
-    public function setEntityManager(EntityManager $entityManager)
-    {
-        $this->_entityManager = $entityManager;
     }
 
     /**
@@ -139,7 +110,7 @@ class AdminClass
      */
     public function getAdminClassName()
     {
-        return $this->getAdminClassNameByEntityName($this->getEntityClass());
+        return $this->getAdminClassNameByEntityName($this->getEntityItem()->getItemClassName());
     }
 
     /**
@@ -159,7 +130,7 @@ class AdminClass
      */
     public function getAdminFileName()
     {
-        $r = new \ReflectionClass($this->getEntityClass());
+        $r = new \ReflectionClass($this->getEntityItem()->getItemClassName());
 
         return str_replace(array(
             DIRECTORY_SEPARATOR . 'Entity' . DIRECTORY_SEPARATOR,
@@ -190,7 +161,7 @@ class AdminClass
         return $this->getTemplating()->render('MaxmodeGeneratorBundle:Sonata:Admin/class.php.twig', array(
             'className' => array_pop($namespaceParts),
             'namespace' => implode('\\', $namespaceParts),
-            'entityClass' => $this->getEntityClass(),
+            'entityClass' => $this->getEntityItem()->getItemClassName(),
             'editFields' => $this->prepareFieldList($this->_editFields),
             'listFields' => $this->prepareFieldList($this->_listFields),
             'maxLineLength' => self::MAX_LINE_LENGTH,
@@ -208,7 +179,7 @@ class AdminClass
         foreach ($fieldList as $fieldName) {
             $list[] = array(
                 'name' => $fieldName,
-                'type' => $this->getFieldType($fieldName),
+                'type' => $this->getEntityItem()->getFieldType($fieldName),
                 'key' => $this->_translator->getAdminFieldKey($this->getAdminClassName(), $fieldName),
             );
         }
@@ -217,33 +188,28 @@ class AdminClass
     }
 
     /**
-     * List of field names
-     *
-     * @return array
-     */
-    public function getEntityFields()
-    {
-        return $this->_entityManager->getClassMetadata($this->getEntityClass())->getFieldNames();
-    }
-
-    /**
-     * Type of field
-     *
-     * @param string $fieldName
-     *
-     * @return \Doctrine\DBAL\Types\Type|string
-     */
-    public function getFieldType($fieldName)
-    {
-        return $this->_entityManager->getClassMetadata($this->getEntityClass())->getTypeOfField($fieldName);
-    }
-
-    /**
      * @param Translation $translation
      */
     public function setTranslation(Translation $translation)
     {
         $this->_translator = $translation;
+    }
+
+
+    /**
+     * @param \Maxmode\GeneratorBundle\Doctrine\Entity\Item $entityItem
+     */
+    public function setEntityItem($entityItem)
+    {
+        $this->_entityItem = $entityItem;
+    }
+
+    /**
+     * @return \Maxmode\GeneratorBundle\Doctrine\Entity\Item
+     */
+    public function getEntityItem()
+    {
+        return $this->_entityItem;
     }
 
 }

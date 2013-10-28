@@ -6,12 +6,18 @@ use Symfony\Bundle\TwigBundle\Debug\TimedTwigEngine;
 
 use Maxmode\GeneratorBundle\Generator\AdminClass;
 use Maxmode\GeneratorBundle\Generator\Translation;
+use Maxmode\GeneratorBundle\Doctrine\Entity\Item;
 
 /**
  * ServicesGenerator is responsible for generating services definition
  */
 class Services
 {
+    /**
+     * @var Item
+     */
+    protected $_entityItem;
+
     /**
      * @var AdminClass
      */
@@ -203,7 +209,7 @@ class Services
             'services' => $services,
             'serviceId' => $this->getAdminServiceId(),
             'group' => $this->getGroup(),
-            'entityClass' => $this->getClassGenerator()->getEntityClass(),
+            'entityClass' => $this->getEntityItem()->getItemClassName(),
             'adminCaption' => $this->_translator->getAdminClassKey($this->getClassGenerator()->getAdminClassName())
         ));
     }
@@ -214,5 +220,21 @@ class Services
     public function setTranslation(Translation $translation)
     {
         $this->_translator = $translation;
+    }
+
+    /**
+     * @param \Maxmode\GeneratorBundle\Doctrine\Entity\Item $entityItem
+     */
+    public function setEntityItem($entityItem)
+    {
+        $this->_entityItem = $entityItem;
+    }
+
+    /**
+     * @return \Maxmode\GeneratorBundle\Doctrine\Entity\Item
+     */
+    public function getEntityItem()
+    {
+        return $this->_entityItem;
     }
 }

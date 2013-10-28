@@ -8,19 +8,23 @@
         <parameter key="maxmode_generator.generator.admin_class.class">Maxmode\GeneratorBundle\Generator\AdminClass</parameter>
         <parameter key="maxmode_generator.generator.services.class">Maxmode\GeneratorBundle\Generator\Services</parameter>
         <parameter key="maxmode_generator.generator.translation.class">Maxmode\GeneratorBundle\Generator\Translation</parameter>
-        <parameter key="maxmode_generator.entity.select.class">Maxmode\GeneratorBundle\Entity\Select</parameter>
+        <parameter key="maxmode_generator.doctrine.entity.select.class">Maxmode\GeneratorBundle\Doctrine\Entity\Select</parameter>
         <parameter key="maxmode_generator.sonata_admin.generator.class">Maxmode\GeneratorBundle\Command\Sonata\Admin\GeneratorCommand</parameter>
+        <parameter key="maxmode_generator.doctrine.entity.item.class">Maxmode\GeneratorBundle\Doctrine\Entity\Item</parameter>
     </parameters>
 
     <services>
         <service id="maxmode_generator.generator.translation" class="%maxmode_generator.generator.translation.class%" />
 
+        <service id="maxmode_generator.doctrine.entity.item" class="%maxmode_generator.doctrine.entity.item.class%">
+            <call method="setEntityManager">
+                <argument type="service" id="doctrine.orm.entity_manager" />
+            </call>
+        </service>
+
         <service id="maxmode_generator.generator.admin_class" class="%maxmode_generator.generator.admin_class.class%" >
             <call method="setFilesystem">
                 <argument type="service" id="filesystem" />
-            </call>
-            <call method="setEntityManager">
-                <argument type="service" id="doctrine.orm.entity_manager" />
             </call>
             <call method="setTemplating" >
                 <argument type="service" id="templating" />
@@ -34,9 +38,6 @@
             <call method="setFilesystem">
                 <argument type="service" id="filesystem" />
             </call>
-            <call method="setClassGenerator">
-                <argument type="service" id="maxmode_generator.generator.admin_class" />
-            </call>
             <call method="setTemplating" >
                 <argument type="service" id="templating" />
             </call>
@@ -45,7 +46,7 @@
             </call>
         </service>
 
-        <service id="maxmode_generator.entity.select" class="%maxmode_generator.entity.select.class%" >
+        <service id="maxmode_generator.doctrine.entity.select" class="%maxmode_generator.doctrine.entity.select.class%" >
             <call method="setEntityManager">
                 <argument type="service" id="doctrine.orm.entity_manager" />
             </call>
@@ -63,7 +64,10 @@
                 <argument type="service" id="maxmode_generator.generator.services" />
             </call>
             <call method="setEntitySelect">
-                <argument type="service" id="maxmode_generator.entity.select" />
+                <argument type="service" id="maxmode_generator.doctrine.entity.select" />
+            </call>
+            <call method="setEntityItem">
+                <argument type="service" id="maxmode_generator.doctrine.entity.item" />
             </call>
         </service>
     </services>
